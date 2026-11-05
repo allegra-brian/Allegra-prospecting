@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "sample": true,
+  "createdAt": "2026-11-05",
+  "client": {
+    "company": "Harper Ridge Family Dental",
+    "contact": "Dana Kowalski",
+    "title": "Office Manager",
+    "email": "dana@harperridgedental.example",
+    "website": "harperridgedental.example"
+  },
+  "email": "Hi Brian,\n\nHope you're well! We're opening our second office in Arlington Heights in March and want to send postcards to the homes around the new location to let people know we're accepting new patients. Probably around 5,000 of them. We'll also need new business cards for our two new hygienists.\n\nCould you send me a quote? We'd like everything by the end of February so the mailing goes out before the opening.\n\nThanks,\nDana Kowalski\nOffice Manager, Harper Ridge Family Dental",
+  "research": {
+    "snapshot": [
+      "Family and cosmetic dental practice in Palatine, IL, with 3 dentists and about 18 staff.",
+      "Opening a second office on Northwest Hwy in Arlington Heights, March 2027.",
+      "Website lists new-patient specials and accepts most PPO plans."
+    ],
+    "contact": [
+      "Dana Kowalski, Office Manager since 2019. Handles marketing and vendor orders.",
+      "Ordered the 2025 new-patient postcards and business cards from Allegra."
+    ],
+    "linkedin": {
+      "person": null,
+      "company": null,
+      "note": "Sample brief: in a real run, Claude adds the public LinkedIn profile URLs it finds here."
+    },
+    "news": [
+      "Local paper (Mar 2026): the practice announced the Arlington Heights expansion and is hiring two hygienists."
+    ],
+    "sources": []
+  },
+  "upsell": {
+    "service": "mail",
+    "idea": "EDDM postcards to the carrier routes around the new office, plus a grand-opening banner for the storefront."
+  },
+  "specs": [],
+  "reply": null
+}

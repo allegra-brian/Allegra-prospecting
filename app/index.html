@@ -1,0 +1,675 @@
+<title>Allegra Quote Assistant</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Roboto:wght@400;500;700;900&display=swap">
+<style>
+/* Layout: one dominant purple sidebar (38%) holds the request; the white work area reads top-down: summary → research → specs → past jobs → reply. */
+/* Single light theme, by choice: the Allegra Design System defines one light theme only. */
+:root {
+  --allegra-purple: #522E90;
+  --purple-700: #4A2A82;
+  --purple-900: #3A1F68;
+  --purple-100: #EAE2F4;
+  --purple-050: #F5F1FA;
+  --ink: #231F20;
+  --text-body: #35313a;
+  --text-muted: #6E6780;
+  --text-on-brand: #FFFFFF;
+  --text-on-brand-dim: #D9CEEC;
+  --surface-page: #FFFFFF;
+  --surface-muted: #F4F2F7;
+  --border-subtle: #DDD7E6;
+  --border-strong: #A9A2B6;
+  --ok-bg: #E4F4E8; --ok-fg: #1B6B30;
+  --warn-bg: #FEF3D6; --warn-fg: #7A5300;
+  --miss-bg: #FCE7E8; --miss-fg: #A3262A;
+  --svc-marketing: #522E90; --svc-print: #96BB33; --svc-mail: #F48326; --svc-design: #FCBA30;
+  --svc-web: #67A8CE; --svc-signs: #EE3E42; --svc-promo: #25408E; --svc-labels: #408EB2;
+  --font-sans: 'Roboto', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  --font-script: 'Caveat', 'Segoe Script', cursive;
+  --radius-sm: 4px; --radius-card: 10px; --radius-pill: 999px;
+  --shadow-md: 0 4px 12px rgba(35,31,32,.10);
+  --ease: cubic-bezier(.2,.6,.2,1);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { background: var(--surface-page); }
+body { color: var(--text-body); font-family: var(--font-sans); font-size: 16px; line-height: 1.55; }
+h1, h2, h3 { color: var(--ink); line-height: 1.15; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+a { color: var(--allegra-purple); }
+a:hover { color: var(--purple-900); }
+:focus-visible { outline: 3px solid var(--allegra-purple); outline-offset: 2px; }
+.eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); }
+
+.shell { display: grid; grid-template-columns: minmax(0, 38%) minmax(0, 1fr); min-height: 100vh; }
+
+/* Purple sidebar */
+.side {
+  background: var(--allegra-purple); color: var(--text-on-brand);
+  padding-block: 40px; padding-left: max(32px, env(safe-area-inset-left, 0px)); padding-right: 32px;
+  display: flex; flex-direction: column; gap: 24px;
+}
+.side-inner { position: sticky; top: 24px; display: flex; flex-direction: column; gap: 22px; }
+.brandline { font-size: 13px; color: var(--text-on-brand-dim); letter-spacing: .02em; }
+.script { font-family: var(--font-script); font-weight: 700; font-size: clamp(44px, 4vw, 56px); line-height: .85; color: var(--text-on-brand); }
+.side h1 { color: var(--text-on-brand); font-size: 24px; font-weight: 700; margin-top: 6px; }
+.side .lede { color: var(--text-on-brand-dim); font-size: 15px; max-width: 42ch; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 12.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-on-brand-dim); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.side input[type=text], .side textarea {
+  width: 100%; border: 0; border-radius: var(--radius-sm); background: #FFFFFF; color: var(--ink);
+  font: inherit; font-size: 15px; padding: 10px 12px;
+}
+.side textarea { min-height: 260px; resize: vertical; line-height: 1.5; }
+.btn {
+  display: inline-flex; align-items: center; gap: 10px; border: 0; cursor: pointer;
+  font: inherit; font-weight: 700; font-size: 15px; border-radius: var(--radius-sm); padding: 11px 18px;
+  transition: background-color 200ms var(--ease), transform 120ms var(--ease);
+}
+.btn:active { transform: scale(.98); }
+.btn-light { background: #FFFFFF; color: var(--allegra-purple); }
+.btn-light:hover { background: var(--purple-100); }
+.btn-ghost { background: transparent; color: var(--text-on-brand); box-shadow: inset 0 0 0 1.5px var(--text-on-brand-dim); }
+.btn-ghost:hover { background: var(--purple-700); }
+.btn-brand { background: var(--allegra-purple); color: #FFFFFF; }
+.btn-brand:hover { background: var(--purple-700); }
+.btn-outline { background: #FFFFFF; color: var(--allegra-purple); box-shadow: inset 0 0 0 1.5px var(--border-strong); }
+.btn-outline:hover { background: var(--purple-050); }
+.arrow { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 7px solid currentColor; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.data-box { border-top: 1px solid rgba(217,206,236,.35); padding-top: 18px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; color: var(--text-on-brand-dim); }
+.data-box strong { color: var(--text-on-brand); font-weight: 700; }
+.file-btn { position: relative; overflow: hidden; }
+.file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.side .note { font-size: 13px; color: var(--text-on-brand-dim); }
+
+/* Work area */
+.main {
+  padding-block: 40px 64px; padding-left: 40px; padding-right: max(40px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 40px; min-width: 0; max-width: 980px;
+}
+.summary { display: flex; flex-direction: column; gap: 10px; }
+.summary h2 { font-size: clamp(28px, 3vw, 38px); font-weight: 900; letter-spacing: -.01em; }
+.summary .ask { font-size: 18px; color: var(--text-body); max-width: 62ch; }
+.pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; border-radius: var(--radius-pill); padding: 4px 12px; background: var(--purple-100); color: var(--purple-900); }
+.pill.ok { background: var(--ok-bg); color: var(--ok-fg); }
+.pill.warn { background: var(--warn-bg); color: var(--warn-fg); }
+.pill.miss { background: var(--miss-bg); color: var(--miss-fg); }
+.pill.sample { background: var(--surface-muted); color: var(--text-muted); }
+
+section.block { display: flex; flex-direction: column; gap: 16px; border-top: 1px solid var(--border-subtle); padding-top: 28px; }
+.block-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+.block-head h3 { font-size: 22px; font-weight: 700; }
+.block-head .meta { font-size: 14px; color: var(--text-muted); }
+
+.research { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 32px; }
+.research h4 { margin: 0 0 6px; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); }
+.research ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; }
+.research .wide { grid-column: 1 / -1; }
+.links { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 15px; }
+.empty { background: var(--surface-muted); border-radius: var(--radius-card); padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; font-size: 15px; }
+
+.specs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.spec { border: 1px solid var(--border-subtle); border-radius: var(--radius-card); padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.spec-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.spec-name { font-weight: 700; color: var(--ink); font-size: 15px; }
+.spec .val { font-size: 14px; color: var(--text-muted); overflow-wrap: anywhere; }
+.spec.missing { background: var(--purple-050); border-color: transparent; }
+.spec .pill { padding: 2px 10px; font-size: 12px; }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--border-subtle); border-radius: var(--radius-card); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border-subtle); vertical-align: top; }
+th { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); background: var(--surface-muted); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.num, th.num { text-align: right; white-space: nowrap; }
+td .sub { display: block; font-size: 13px; color: var(--text-muted); }
+.history { display: flex; flex-wrap: wrap; gap: 8px 32px; font-size: 15px; }
+.history b { color: var(--ink); }
+.range { background: var(--purple-050); border-radius: var(--radius-sm); padding: 12px 16px; font-size: 15px; display: flex; flex-wrap: wrap; gap: 6px 24px; }
+.range b { color: var(--ink); }
+.subhead { font-size: 15px; font-weight: 700; color: var(--ink); }
+
+.reply-card { border-radius: var(--radius-card); box-shadow: var(--shadow-md); border: 1px solid var(--border-subtle); padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+.reply-card label { font-size: 12.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); }
+.reply-card input, .reply-card textarea { width: 100%; font: inherit; color: var(--ink); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 10px 12px; background: #FFFFFF; }
+.reply-card textarea { min-height: 320px; line-height: 1.6; resize: vertical; font-size: 15px; }
+.upsell { display: flex; gap: 12px; align-items: flex-start; font-size: 15px; }
+.dot { flex: none; width: 14px; height: 14px; border-radius: 50%; margin-top: 4px; }
+.toast { font-size: 14px; color: var(--ok-fg); font-weight: 700; min-height: 1.2em; }
+.legal { font-size: 10.5px; color: var(--text-muted); }
+
+@media (max-width: 860px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .side { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px; }
+  .side-inner { position: static; }
+  .side textarea { min-height: 200px; }
+  .main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 48px; }
+  .specs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .research, .specs, .row2 { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { .btn { transition: none; } .btn:active { transform: none; } }
+</style>
+
+<div class="shell">
+  <aside class="side">
+    <div class="side-inner">
+      <div>
+        <p class="brandline">Allegra Marketing • Print • Mail | Palatine</p>
+        <p class="script" style="margin-top:14px">We're all in</p>
+        <h1>on turning job requests into quotes</h1>
+      </div>
+      <p class="lede">Paste a client's job request. You'll get the specs you still need, matching past jobs, and a reply ready to send.</p>
+
+      <form id="req" class="actions" style="flex-direction:column;gap:16px" autocomplete="off">
+        <div class="row2">
+          <div class="field"><label for="company">Client company</label><input type="text" id="company"></div>
+          <div class="field"><label for="contact">Contact name</label><input type="text" id="contact"></div>
+        </div>
+        <div class="field"><label for="email">Their email</label><textarea id="email" spellcheck="false"></textarea></div>
+        <div class="actions">
+          <button class="btn btn-light" type="submit">Build reply <span class="arrow" aria-hidden="true"></span></button>
+          <button class="btn btn-ghost" type="button" id="copyPrompt">Copy prompt for Claude</button>
+        </div>
+        <p class="note" id="promptNote">Company research and LinkedIn come from Claude. Copy the prompt, run it in Claude Code, then load the brief it saves.</p>
+      </form>
+
+      <div class="data-box">
+        <p><strong>Claude brief:</strong> <span id="briefStatus"></span></p>
+        <div class="actions">
+          <span class="btn btn-ghost file-btn">Load Claude brief<input type="file" id="briefFile" accept=".json,application/json" aria-label="Load Claude brief JSON"></span>
+        </div>
+        <p><strong>Job history:</strong> <span id="jobsStatus"></span></p>
+        <div class="actions">
+          <span class="btn btn-ghost file-btn">Load PrintSmith CSV<input type="file" id="csvFile" accept=".csv,text/csv" aria-label="Load PrintSmith CSV export"></span>
+          <button class="btn btn-ghost" type="button" id="resetJobs" hidden>Use sample jobs</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main" id="out" aria-live="polite"></main>
+</div>
+
+<script type="text/csv" id="sampleCsv">Invoice,Date,Account,Contact,Description,Product,Quantity,Size,Stock,Colors,Finishing,Total
+24811,2025-03-14,Harper Ridge Family Dental,Dana Kowalski,New patient welcome postcards,Postcard,2500,6 x 9,14pt C2S gloss,4/4,UV coat front,812.40
+25307,2025-09-22,Harper Ridge Family Dental,Dana Kowalski,Business cards - Dr. Patel and front desk,Business Card,1000,3.5 x 2,16pt matte,4/4,Rounded corners,148.00
+24790,2025-03-06,Palatine Park Realty Group,Marcus Lee,Just Listed postcards - Plum Grove,Postcard,1500,6 x 11,14pt C2S gloss,4/4,None,486.75
+25012,2025-05-19,Palatine Park Realty Group,Marcus Lee,Yard signs - open house,Sign,40,18 x 24,4mm coroplast,4/0,H-stakes,620.00
+25544,2025-11-03,Palatine Park Realty Group,Marcus Lee,EDDM postcards - spring market,Postcard,6000,6.25 x 9,14pt C2S gloss,4/4,EDDM bundling,1584.00
+24903,2025-04-10,Northwest Community Credit Union,Alicia Romero,Auto loan rate rack cards,Rack Card,2000,4 x 9,14pt C2S gloss,4/4,None,398.00
+25190,2025-07-28,Northwest Community Credit Union,Alicia Romero,Member newsletter - summer,Newsletter,3500,11 x 17 folded to 8.5 x 11,80# gloss text,4/4,Half fold,2140.50
+25633,2025-12-01,Northwest Community Credit Union,Alicia Romero,Lobby banner - holiday savings,Banner,2,3 x 6 ft,13oz vinyl,4/0,Hems and grommets,286.00
+24955,2025-04-24,Kessler HVAC Services,Tom Kessler,Spring tune-up door hangers,Door Hanger,5000,4.25 x 11,14pt C2S gloss,4/4,Die-cut hanger,1095.00
+25402,2025-10-08,Kessler HVAC Services,Tom Kessler,Furnace check EDDM postcards,Postcard,8000,6.25 x 11,14pt C2S gloss,4/4,EDDM bundling,2296.00
+25118,2025-06-30,Willow Creek Montessori,Priya Shah,Enrollment brochures,Brochure,1000,8.5 x 11 tri-fold,100# gloss text,4/4,Tri-fold,742.00
+25455,2025-10-20,Willow Creek Montessori,Priya Shah,Open house flyers,Flyer,500,8.5 x 11,100# gloss text,4/0,None,165.00
+24870,2025-03-27,Rand Road Auto Care,Luis Ortega,Service reminder postcards,Postcard,1000,4.25 x 6,14pt C2S gloss,4/4,None,268.00
+25266,2025-08-15,Rand Road Auto Care,Luis Ortega,Business cards - 3 technicians,Business Card,1500,3.5 x 2,16pt gloss,4/4,None,189.00
+25348,2025-09-09,Bluestem Physical Therapy,Jenna Morales,Patient exercise booklets,Booklet,250,5.5 x 8.5 (24 pages),80# matte text / 100# cover,4/4,Saddle stitch,1137.50
+25587,2025-11-14,Bluestem Physical Therapy,Jenna Morales,Appointment cards,Business Card,2500,3.5 x 2,14pt uncoated,1/1,None,172.00
+25021,2025-05-21,Arbor Lane Senior Living,Karen Whitfield,Tour invitation mailers,Postcard,3000,6 x 9,14pt C2S matte,4/4,Addressing and mailing,1365.00
+25499,2025-10-29,Arbor Lane Senior Living,Karen Whitfield,Resident event posters,Poster,25,18 x 24,100# gloss cover,4/0,None,212.50
+25142,2025-07-07,Lakeshore Title & Escrow,Greg Nowak,Letterhead and #10 envelopes,Letterhead,2000,8.5 x 11,70# white linen,2/0,None,598.00
+25676,2025-12-09,Lakeshore Title & Escrow,Greg Nowak,Closing presentation folders,Folder,500,9 x 12,14pt C1S gloss,4/0,Pocket die-cut + business card slits,1460.00
+24932,2025-04-16,Prairie Oak Lutheran Church,Ruth Lindgren,Easter service programs,Booklet,600,5.5 x 8.5 (8 pages),70# uncoated text,1/1,Saddle stitch,236.40
+25381,2025-09-18,Cuneo Landscaping,Anthony Cuneo,Truck magnets,Promo,6,12 x 24,30 mil magnet,4/0,Rounded corners,264.00
+25520,2025-11-06,Cuneo Landscaping,Anthony Cuneo,Snow removal flyers,Flyer,2500,8.5 x 5.5,100# gloss text,4/4,None,318.75
+25233,2025-08-04,Hollis Street Bakery,Mia Hollis,Product labels - cookie tins,Label,3000,3 in circle,White BOPP,4/0,Kiss-cut on rolls,454.00
+25611,2025-11-24,Hollis Street Bakery,Mia Hollis,Holiday menus,Menu,300,8.5 x 14,100# matte cover,4/4,Lamination,348.00</script>
+<script type="application/json" id="sampleBrief">{
+  "version": 1,
+  "sample": true,
+  "createdAt": "2026-11-05",
+  "client": {
+    "company": "Harper Ridge Family Dental",
+    "contact": "Dana Kowalski",
+    "title": "Office Manager",
+    "email": "dana@harperridgedental.example",
+    "website": "harperridgedental.example"
+  },
+  "email": "Hi Brian,\n\nHope you're well! We're opening our second office in Arlington Heights in March and want to send postcards to the homes around the new location to let people know we're accepting new patients. Probably around 5,000 of them. We'll also need new business cards for our two new hygienists.\n\nCould you send me a quote? We'd like everything by the end of February so the mailing goes out before the opening.\n\nThanks,\nDana Kowalski\nOffice Manager, Harper Ridge Family Dental",
+  "research": {
+    "snapshot": [
+      "Family and cosmetic dental practice in Palatine, IL, with 3 dentists and about 18 staff.",
+      "Opening a second office on Northwest Hwy in Arlington Heights, March 2027.",
+      "Website lists new-patient specials and accepts most PPO plans."
+    ],
+    "contact": [
+      "Dana Kowalski, Office Manager since 2019. Handles marketing and vendor orders.",
+      "Ordered the 2025 new-patient postcards and business cards from Allegra."
+    ],
+    "linkedin": {
+      "person": null,
+      "company": null,
+      "note": "Sample brief: in a real run, Claude adds the public LinkedIn profile URLs it finds here."
+    },
+    "news": [
+      "Local paper (Mar 2026): the practice announced the Arlington Heights expansion and is hiring two hygienists."
+    ],
+    "sources": []
+  },
+  "upsell": {
+    "service": "mail",
+    "idea": "EDDM postcards to the carrier routes around the new office, plus a grand-opening banner for the storefront."
+  },
+  "specs": [],
+  "reply": null
+}</script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var store = {
+    get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} }
+  };
+
+  /* ---------- CSV ---------- */
+  function parseCsv(text) {
+    var rows = [], row = [], cell = "", q = false;
+    text = text.replace(/^﻿/, "");
+    for (var i = 0; i < text.length; i++) {
+      var c = text[i];
+      if (q) {
+        if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; }
+        else if (c === '"') q = false;
+        else cell += c;
+      } else if (c === '"') q = true;
+      else if (c === ",") { row.push(cell); cell = ""; }
+      else if (c === "\n" || c === "\r") {
+        if (c === "\r" && text[i + 1] === "\n") i++;
+        row.push(cell); cell = "";
+        if (row.some(function (x) { return x.trim() !== ""; })) rows.push(row);
+        row = [];
+      } else cell += c;
+    }
+    row.push(cell);
+    if (row.some(function (x) { return x.trim() !== ""; })) rows.push(row);
+    return rows;
+  }
+  var COLS = {
+    invoice: ["invoice", "invoice #", "invoice number", "invoice no", "job #", "job number", "job"],
+    date: ["date", "invoice date", "date ordered", "ordered", "pickup date", "date wanted"],
+    account: ["account", "account name", "customer", "company", "client"],
+    contact: ["contact", "contact name", "ordered by"],
+    description: ["description", "job description", "job name", "title", "item"],
+    product: ["product", "product type", "category", "type"],
+    quantity: ["quantity", "qty", "quantity ordered"],
+    size: ["size", "finished size", "final size"],
+    stock: ["stock", "paper", "paper stock", "material"],
+    colors: ["colors", "color", "ink", "inks"],
+    finishing: ["finishing", "bindery", "finish"],
+    total: ["total", "invoice total", "grand total", "amount", "price", "subtotal"]
+  };
+  function toJobs(text) {
+    var rows = parseCsv(text);
+    if (rows.length < 2) throw new Error("That file has no job rows.");
+    var head = rows[0].map(function (h) { return h.trim().toLowerCase(); });
+    var idx = {};
+    Object.keys(COLS).forEach(function (k) {
+      var i = head.findIndex(function (h) { return COLS[k].indexOf(h) !== -1; });
+      idx[k] = i;
+    });
+    if (idx.account < 0 || (idx.description < 0 && idx.product < 0)) throw new Error("Couldn't find Account and Description columns. Export PrintSmith invoice history with those columns and try again.");
+    return rows.slice(1).map(function (r) {
+      var g = function (k) { return idx[k] >= 0 ? (r[idx[k]] || "").trim() : ""; };
+      var desc = g("description");
+      var prod = g("product") || productsIn(desc)[0] || "Other";
+      return {
+        invoice: g("invoice"), date: g("date"), account: g("account"), contact: g("contact"),
+        description: desc, product: normProduct(prod), quantity: num(g("quantity")), size: g("size"),
+        stock: g("stock"), colors: g("colors"), finishing: g("finishing"), total: num(g("total"))
+      };
+    }).filter(function (j) { return j.account; });
+  }
+  function num(s) { var n = parseFloat(String(s).replace(/[$,\s]/g, "")); return isNaN(n) ? 0 : n; }
+
+  /* ---------- Products & specs ---------- */
+  var PRODUCTS = [
+    ["Business Card", /business ?cards?|appointment cards?/i],
+    ["Rack Card", /rack ?cards?/i],
+    ["Postcard", /post ?cards?|mailers?/i],
+    ["Door Hanger", /door ?hangers?/i],
+    ["Flyer", /\bfl[yi]ers?\b/i],
+    ["Brochure", /brochures?|tri-?folds?/i],
+    ["Booklet", /booklets?|\bprograms?\b|catalogs?/i],
+    ["Newsletter", /newsletters?/i],
+    ["Banner", /banners?/i],
+    ["Sign", /\bsigns?\b|signage/i],
+    ["Poster", /posters?/i],
+    ["Letterhead", /letterhead|envelopes?|stationery/i],
+    ["Folder", /folders?/i],
+    ["Label", /\blabels?\b|stickers?/i],
+    ["Menu", /\bmenus?\b/i],
+    ["Promo", /magnets?|promo|t-?shirts?|apparel|\bpens\b|swag|mugs?/i]
+  ];
+  var PLURAL = { "Business Card": "business cards", "Rack Card": "rack cards", "Postcard": "postcards", "Door Hanger": "door hangers", "Flyer": "flyers", "Brochure": "brochures", "Booklet": "booklets", "Newsletter": "newsletters", "Banner": "banners", "Sign": "signs", "Poster": "posters", "Letterhead": "letterhead and envelopes", "Folder": "folders", "Label": "labels", "Menu": "menus", "Promo": "promotional items" };
+  function productsIn(text) {
+    return PRODUCTS.map(function (p) { var m = text.match(p[1]); return m ? { name: p[0], at: m.index } : null; })
+      .filter(Boolean).sort(function (a, b) { return a.at - b.at; }).map(function (p) { return p.name; });
+  }
+  function normProduct(p) { var hit = productsIn(p); return hit[0] || p; }
+
+  var SPECS = [
+    { key: "quantity", name: "Quantity", re: /\b\d{1,3}(?:,\d{3})+\b|\b\d{2,6}\b(?=\s*(?:[a-z#-]+\s+){0,2}(?:of them|pcs|pieces|copies|units|each|ea\b|postcards?|cards?|fl[yi]ers?|brochures?|booklets?|banners?|signs?|posters?|hangers?|labels?|menus?|folders?|envelopes?|magnets?|sheets?))|quantit|\bqty\b|a (?:few )?thousand|hundred/i,
+      ask: function (p) { return "How many " + p + " do you need? If you're not sure, give me two or three quantities and I'll price each one."; } },
+    { key: "size", name: "Finished size", re: /\b\d+(?:\.\d+)?\s*(?:"|in(?:ch(?:es)?)?|ft|')?\s*(?:x|×|by)\s*\d+(?:\.\d+)?|letter[- ]size|tabloid|legal[- ]size|half[- ]sheet|standard size|\bA[3-5]\b/i,
+      ask: function (p) { return "What finished size would you like for the " + p + "? (For example, 6 × 9 or 8.5 × 11.)"; } },
+    { key: "product", name: "Product type", re: null,
+      ask: function () { return "What kind of piece is this: postcards, flyers, a brochure, a sign, or something else?"; } },
+    { key: "stock", name: "Paper / stock", re: /\b\d{2,3}\s?(?:#|lb\b|pt\b)|gloss|matte|uncoated|\bsilk\b|linen|card ?stock|heavy paper|thick paper|\bvinyl\b|coroplast|magnet|foam ?board/i,
+      ask: function () { return "Do you have a paper preference, such as a heavy card stock, or a gloss or matte finish?"; } },
+    { key: "color", name: "Ink / color", re: /full[- ]?colou?r|\b[1-4]\s?\/\s?[0-4]\b|black (?:and|&) white|\bb\s?&\s?w\b|cmyk|\bpms\b|spot colou?r|one[- ]colou?r|two[- ]colou?r|grayscale|double[- ]sided|single[- ]sided|both sides|one side/i,
+      ask: function () { return "Should they print in full color on both sides, or on one side only?"; } },
+    { key: "finishing", name: "Finishing", re: /\bfold|binding|\bbound\b|stapl|saddle|perforat|scor(?:e|ing)\b|laminat|\bcoat(?:ed|ing)?\b|\buv\b|die[- ]?cut|round(?:ed)? corners?|drill|grommet|\bhems?\b|numbered|collat|padded|no finishing/i,
+      ask: function () { return "Any finishing you'd like, such as folding, rounded corners, or a protective coating?"; } },
+    { key: "artwork", name: "Artwork", re: /artwork|art work|print[- ]ready|\bpdf\b|\bfiles?\b|design (?:it|them|help)|help (?:with )?(?:the )?design|\blogo\b|\bproof|indesign|illustrator|canva|attached/i,
+      ask: function () { return "Will you send print-ready artwork, or would you like our design team to create it? (Design is quick, and you'll see a proof before anything prints.)"; } },
+    { key: "due", name: "Due date", re: /\bby (?:the )?(?:end of |mid-?|early |late )?(?:mon|tues|wednes|thurs|fri|satur|sun)day|\bby (?:the )?(?:end of |mid-?|early |late )?(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*|\bdue\b|deadline|in[- ]hands?|need (?:them|it|these) by|\basap\b|\brush\b|\bby \d{1,2}\/\d{1,2}|next week|end of (?:the )?(?:month|week)/i,
+      ask: function () { return "When do you need them in hand?"; } },
+    { key: "delivery", name: "Delivery", re: /deliver|pick ?up|\bship|\bmail(?:ing|ed)?\b|\beddm\b|mailing list|drop[- ]?off|send (?:them |these )?to (?:the )?(?:homes|houses|neighbo)/i,
+      ask: function () { return "Should we deliver them, will you pick them up, or are they being mailed? If they're being mailed, do you have a mailing list or should we target the neighborhood for you?"; } }
+  ];
+
+  function snippet(text, re) {
+    var m = re && text.match(re);
+    if (!m) return "";
+    var a = Math.max(0, m.index - 28), b = Math.min(text.length, m.index + m[0].length + 28);
+    var s = text.slice(a, b).replace(/\s+/g, " ").trim();
+    return (a > 0 ? "…" : "") + s + (b < text.length ? "…" : "");
+  }
+  function checkSpecs(text, products) {
+    return SPECS.map(function (s) {
+      if (s.key === "product") return { key: s.key, status: products.length ? "found" : "missing", value: products.map(function (p) { return PLURAL[p] || p; }).join(", ") };
+      var v = snippet(text, s.re);
+      return { key: s.key, status: v ? "found" : "missing", value: v };
+    });
+  }
+  function targetQty(text) {
+    var m = text.match(/\b\d{1,3}(?:,\d{3})+\b|\b\d{2,6}\b(?=\s*(?:[a-z#-]+\s+){0,2}(?:of them|pcs|pieces|copies|units|postcards?|cards?|fl[yi]ers?|brochures?|booklets?|signs?|posters?|hangers?|labels?|menus?|folders?))/i);
+    return m ? num(m[0]) : 0;
+  }
+
+  /* ---------- Job matching ---------- */
+  function normName(s) { return String(s || "").toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9 ]/g, " ").replace(/\b(the|inc|llc|ltd|co|corp|company|group|pc|pllc)\b/g, " ").replace(/\s+/g, " ").trim(); }
+  function sameClient(a, b) {
+    a = normName(a); b = normName(b);
+    if (!a || !b) return false;
+    return a === b || (a.length > 5 && b.indexOf(a) !== -1) || (b.length > 5 && a.indexOf(b) !== -1);
+  }
+  function money(n) { return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function each(n) { return n >= 1 ? money(n) : "$" + n.toFixed(3).replace(/0$/, ""); }
+  function fmtDate(d) { var t = new Date(d + "T12:00:00"); return isNaN(t) ? d : t.toLocaleDateString("en-US", { month: "short", year: "numeric" }); }
+
+  /* ---------- Upsell ---------- */
+  var SERVICE_LABEL = { marketing: "Marketing", print: "Print", mail: "Mail", design: "Design", web: "Web", signs: "Signs", promo: "Promo", labels: "Labels" };
+  function pickUpsell(products, text) {
+    var opening = /open(?:ing)?|new (?:location|office|store)|grand opening|expan/i.test(text);
+    if (products.indexOf("Postcard") !== -1 || products.indexOf("Door Hanger") !== -1) return { service: "mail", idea: "We can also handle the mailing for you. With Every Door Direct Mail, we pick the carrier routes around your location and the postcards go from our shop straight to the post office, with no mailing list needed." };
+    if (opening) return { service: "signs", idea: "With the opening coming up, we can also make a window banner or storefront signs so the new location gets noticed from the street." };
+    if (products.indexOf("Flyer") !== -1 || products.indexOf("Poster") !== -1) return { service: "signs", idea: "If it helps, we can make a matching banner or sign so the message carries through on site." };
+    if (products.indexOf("Business Card") !== -1 || products.indexOf("Letterhead") !== -1) return { service: "promo", idea: "If you'd like branded items to go with them, like pens, magnets, or notepads, I can quote those at the same time." };
+    if (products.indexOf("Brochure") !== -1 || products.indexOf("Booklet") !== -1 || products.indexOf("Newsletter") !== -1) return { service: "design", idea: "Our design team can also give the layout a fresh look, or update the content, if that would help." };
+    if (products.indexOf("Banner") !== -1 || products.indexOf("Sign") !== -1) return { service: "print", idea: "We can also print matching flyers or handouts so everything looks like one campaign." };
+    return { service: "marketing", idea: "If you're planning other marketing around this, I'm happy to share a few ideas that have worked well for businesses like yours." };
+  }
+
+  /* ---------- State ---------- */
+  var SAMPLE_JOBS = toJobs($("sampleCsv").textContent);
+  var SAMPLE_BRIEF = JSON.parse($("sampleBrief").textContent);
+  var jobs = SAMPLE_JOBS, jobsSource = "sample";
+  var brief = SAMPLE_BRIEF;
+  var savedCsv = store.get("allegra-qa-csv");
+  if (savedCsv) { try { jobs = toJobs(savedCsv); jobsSource = store.get("allegra-qa-csv-name") || "PrintSmith export"; } catch (e) { store.set("allegra-qa-csv", null); } }
+
+  function applyBrief(b) {
+    brief = b;
+    $("company").value = (b.client && b.client.company) || "";
+    $("contact").value = (b.client && b.client.contact) || "";
+    $("email").value = b.email || "";
+  }
+  function statusLine() {
+    $("briefStatus").textContent = brief ? ((brief.sample ? "Sample brief for " : "") + ((brief.client && brief.client.company) || "client") + (brief.createdAt ? " (" + brief.createdAt + ")" : "")) : "none loaded";
+    $("jobsStatus").textContent = jobsSource === "sample" ? "Sample data, " + jobs.length + " jobs" : jobsSource + ", " + jobs.length + " jobs";
+    $("resetJobs").hidden = jobsSource === "sample";
+  }
+
+  /* ---------- Build ---------- */
+  function build() {
+    var company = $("company").value.trim();
+    var contact = $("contact").value.trim();
+    var text = $("email").value;
+    var first = contact.split(/\s+/)[0] || "there";
+    if (brief && company && brief.client && !sameClient(brief.client.company, company)) brief = null;
+    statusLine();
+
+    var products = productsIn(text);
+    var phrase = products.length ? products.map(function (p) { return PLURAL[p] || p.toLowerCase(); }).join(" and ") : "pieces";
+    var specs = (brief && brief.specs && brief.specs.length && brief.email === text) ? brief.specs : checkSpecs(text, products);
+    var specMap = {}; specs.forEach(function (s) { specMap[s.key] = s; });
+    var missing = SPECS.filter(function (s) { return !specMap[s.key] || specMap[s.key].status !== "found"; });
+
+    var history = jobs.filter(function (j) { return sameClient(j.account, company); }).sort(function (a, b) { return b.date < a.date ? -1 : 1; });
+    var tq = targetQty(text);
+    var similar = [];
+    products.forEach(function (p, i) {
+      // the quantity in the email belongs to the first product; others sort by recency
+      similar = similar.concat(jobs.filter(function (j) { return j.product === p; }).map(function (j) {
+        return { job: j, score: (i === 0 && tq && j.quantity) ? Math.abs(Math.log(j.quantity / tq)) : -Date.parse(j.date) / 1e13 };
+      }).sort(function (a, b) { return a.score - b.score; }).slice(0, products.length > 1 ? 3 : 5).map(function (x) { return x.job; }));
+    });
+
+    var upsell = (brief && brief.upsell && brief.upsell.idea) ? brief.upsell : pickUpsell(products, text);
+    var upsellLine = pickUpsell(products, text); // client-facing wording for the email
+
+    var reply = (brief && brief.reply && brief.reply.body && brief.email === text) ? brief.reply : draftReply(first, company, phrase, products, missing, history, upsellLine);
+    render({ company: company, contact: contact, text: text, products: products, phrase: phrase, specs: specs, specMap: specMap, missing: missing, history: history, similar: similar, upsell: upsell, reply: reply });
+  }
+
+  function draftReply(first, company, phrase, products, missing, history, upsell) {
+    var lines = [];
+    lines.push("Hi " + first + ",");
+    lines.push("");
+    var opener = "Thanks for reaching out about the " + phrase + ".";
+    if (history.length) {
+      var last = history[0];
+      var desc = last.description.replace(/\s+-\s+/g, " for ");
+      desc = /^[A-Z][a-z]/.test(desc) ? desc.charAt(0).toLowerCase() + desc.slice(1) : desc;
+      opener += " It's always good to hear from you. We last worked together on your " + desc + " in " + fmtDate(last.date) + ", and I'd be glad to help with this one too.";
+    } else {
+      opener += " I'd be glad to help " + (company || "you") + " with this.";
+    }
+    lines.push(opener);
+    lines.push("");
+    if (missing.length) {
+      lines.push("So I can get you an accurate quote, could you confirm a few details?");
+      lines.push("");
+      missing.forEach(function (s) { lines.push("• " + s.ask(phrase)); });
+      if (products.indexOf("Business Card") !== -1) lines.push("• For the business cards, the name, title, and contact details for each person.");
+      lines.push("");
+      lines.push("Once I have those, I'll send your quote within one business day.");
+    } else {
+      if (products.indexOf("Business Card") !== -1) {
+        lines.push("Could you send the name, title, and contact details for each business card?");
+        lines.push("");
+      }
+      lines.push("You've given me everything I need. I'll send your quote within one business day.");
+    }
+    lines.push("");
+    lines.push(upsell.idea + " Just let me know if you'd like that included.");
+    lines.push("");
+    lines.push("Thanks,");
+    lines.push("Brian");
+    lines.push("Allegra Marketing • Print • Mail | Palatine");
+    lines.push("<<phone>> | <<website address>>");
+    var subj = (products.length ? phrase.charAt(0).toUpperCase() + phrase.slice(1) : "Your project") + " quote" + (company ? " for " + company : "");
+    return { subject: subj, body: lines.join("\n") };
+  }
+
+  function research(company, contact) {
+    var r = brief && brief.research;
+    var q = encodeURIComponent;
+    var searches =
+      '<div class="links">' +
+      '<a href="https://www.google.com/search?q=' + q(company) + '" target="_blank" rel="noopener">Search the company</a>' +
+      '<a href="https://www.google.com/search?tbm=nws&q=' + q('"' + company + '"') + '" target="_blank" rel="noopener">Recent news</a>' +
+      (contact ? '<a href="https://www.linkedin.com/search/results/people/?keywords=' + q(contact + " " + company) + '" target="_blank" rel="noopener">' + esc(contact) + ' on LinkedIn</a>' : "") +
+      '<a href="https://www.linkedin.com/search/results/companies/?keywords=' + q(company) + '" target="_blank" rel="noopener">Company on LinkedIn</a>' +
+      "</div>";
+    if (!r) {
+      return '<div class="empty"><p>No research yet for ' + esc(company || "this client") + '. Click <b>Copy prompt for Claude</b>, run it in Claude Code, and load the brief it saves. Or start with these searches:</p>' + searches + "</div>";
+    }
+    var list = function (arr) { return arr && arr.length ? "<ul>" + arr.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>" : "<p>Not found.</p>"; };
+    var li = r.linkedin || {};
+    var liHtml = (li.person ? '<li><a href="' + esc(li.person) + '" target="_blank" rel="noopener">' + esc(contact || "Contact") + " profile</a></li>" : "") +
+      (li.company ? '<li><a href="' + esc(li.company) + '" target="_blank" rel="noopener">Company page</a></li>' : "") +
+      (li.note ? "<li>" + esc(li.note) + "</li>" : "");
+    var src = (r.sources || []).filter(function (s) { return s && s.url; });
+    return '<div class="research">' +
+      "<div><h4>Company</h4>" + list(r.snapshot) + "</div>" +
+      "<div><h4>Contact</h4>" + list(r.contact) + "</div>" +
+      "<div><h4>Recent news</h4>" + list(r.news) + "</div>" +
+      "<div><h4>LinkedIn</h4>" + (liHtml ? "<ul>" + liHtml + "</ul>" : "<p>Not found.</p>") + "</div>" +
+      '<div class="wide"><h4>' + (src.length ? "Sources" : "Look further") + "</h4>" +
+      (src.length ? '<div class="links">' + src.map(function (s) { return '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.title || s.url) + "</a>"; }).join("") + "</div>" : searches) +
+      "</div></div>";
+  }
+
+  function render(d) {
+    var found = d.specs.filter(function (s) { return s.status === "found"; }).length;
+    var ask = d.products.length ? "Wants a quote for " + d.phrase + "." : "Paste a job request to see what they're asking for.";
+    var pills =
+      (d.history.length ? '<span class="pill ok">Returning client, ' + d.history.length + " past job" + (d.history.length > 1 ? "s" : "") + "</span>" : '<span class="pill">New client</span>') +
+      (d.missing.length ? '<span class="pill miss">' + d.missing.length + " of 9 specs missing</span>" : '<span class="pill ok">All 9 specs found</span>') +
+      (brief ? '<span class="pill">Research loaded</span>' : '<span class="pill warn">No research yet</span>') +
+      ((brief && brief.sample) || jobsSource === "sample" ? '<span class="pill sample">Sample data</span>' : "");
+
+    var specHtml = SPECS.map(function (s) {
+      var v = d.specMap[s.key] || { status: "missing" };
+      var cls = v.status === "found" ? "ok" : v.status === "unclear" ? "warn" : "miss";
+      var label = v.status === "found" ? "Have it" : v.status === "unclear" ? "Unclear" : "Ask";
+      return '<div class="spec' + (v.status === "found" ? "" : " missing") + '"><div class="spec-top"><span class="spec-name">' + s.name + '</span><span class="pill ' + cls + '">' + label + "</span></div>" +
+        '<span class="val">' + (v.value ? esc(v.value) : "Not in the email") + "</span></div>";
+    }).join("");
+
+    var histHtml;
+    if (d.history.length) {
+      var spent = d.history.reduce(function (a, j) { return a + j.total; }, 0);
+      histHtml = '<div class="history"><span>Last order <b>' + fmtDate(d.history[0].date) + '</b></span><span>Jobs <b>' + d.history.length + '</b></span><span>Total spent <b>' + money(spent) + "</b></span></div>" + jobTable(d.history);
+    } else {
+      histHtml = "<p>No past jobs for " + esc(d.company || "this client") + " in the job history.</p>";
+    }
+
+    var simHtml;
+    if (d.similar.length) {
+      var ranges = d.products.map(function (p) {
+        var per = d.similar.filter(function (j) { return j.product === p && j.quantity && j.total; }).map(function (j) { return j.total / j.quantity; });
+        if (!per.length) return "";
+        var lo = Math.min.apply(null, per), hi = Math.max.apply(null, per);
+        var label = PLURAL[p] || p; label = label.charAt(0).toUpperCase() + label.slice(1);
+        return "<span>" + esc(label) + " <b>" + each(lo) + (hi > lo ? " – " + each(hi) : "") + "</b> each (" + per.length + " job" + (per.length > 1 ? "s" : "") + ")</span>";
+      }).join("");
+      simHtml = (ranges ? '<div class="range">' + ranges + "<span>For your quote only. Not included in the email.</span></div>" : "") + jobTable(d.similar, true);
+    } else {
+      simHtml = "<p>No similar jobs found. Once the product type is clear, matching jobs show here.</p>";
+    }
+
+    var svc = d.upsell.service in SERVICE_LABEL ? d.upsell.service : "marketing";
+
+    $("out").innerHTML =
+      '<div class="summary"><p class="eyebrow">Quote request</p><h2>' + esc(d.company || "New client") + "</h2>" +
+      '<p class="ask">' + esc(d.contact ? d.contact + (brief && brief.client && brief.client.title ? ", " + brief.client.title : "") + ". " : "") + esc(ask) + "</p>" +
+      '<div class="pills">' + pills + "</div></div>" +
+
+      '<section class="block"><div class="block-head"><h3>Who they are</h3><span class="meta">' + (brief ? "From Claude brief" : "Not researched yet") + "</span></div>" + research(d.company, d.contact) + "</section>" +
+
+      '<section class="block"><div class="block-head"><h3>What you need to quote it</h3><span class="meta">' + found + " of 9 in the email</span></div>" +
+      '<div class="specs">' + specHtml + "</div></section>" +
+
+      '<section class="block"><div class="block-head"><h3>Past jobs</h3><span class="meta">' + esc(jobsSource === "sample" ? "Sample job history" : jobsSource) + "</span></div>" +
+      '<p class="subhead">History with ' + esc(d.company || "this client") + "</p>" + histHtml +
+      '<p class="subhead">Similar jobs' + (d.products.length ? " (" + esc(d.phrase) + ")" : "") + "</p>" + simHtml + "</section>" +
+
+      '<section class="block"><div class="block-head"><h3>Draft reply</h3><span class="meta">Warm and consultative, signed by Brian</span></div>' +
+      '<div class="upsell"><span class="dot" style="background:var(--svc-' + svc + ')" aria-hidden="true"></span><p><b>Upsell, ' + SERVICE_LABEL[svc].toLowerCase() + ":</b> " + esc(d.upsell.idea) + "</p></div>" +
+      '<div class="reply-card"><div class="field" style="display:flex;flex-direction:column;gap:6px"><label for="subj">Subject</label><input id="subj" type="text" value="' + esc(d.reply.subject) + '"></div>' +
+      '<div class="field" style="display:flex;flex-direction:column;gap:6px"><label for="body">Message</label><textarea id="body">' + esc(d.reply.body) + "</textarea></div>" +
+      '<div class="actions"><button class="btn btn-brand" type="button" id="copyReply">Copy reply <span class="arrow" aria-hidden="true"></span></button><button class="btn btn-outline" type="button" id="copySubj">Copy subject</button></div>' +
+      '<p class="toast" id="toast" role="status"></p></div></section>' +
+      '<p class="legal">Internal tool for Allegra Marketing • Print • Mail, Palatine. Sample jobs and the sample brief are made-up examples. Load your PrintSmith export to use real history.</p>';
+
+    var ta = $("body"); ta.rows = Math.max(12, ta.value.split("\n").length + 4);
+    $("copyReply").addEventListener("click", function () { copy($("body"), "Reply copied. Paste it into your email."); });
+    $("copySubj").addEventListener("click", function () { copy($("subj"), "Subject copied."); });
+  }
+
+  function jobTable(list, showAccount) {
+    return '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Job</th><th>Specs</th><th class="num">Qty</th><th class="num">Total</th><th class="num">Each</th></tr></thead><tbody>' +
+      list.map(function (j) {
+        return "<tr><td>" + esc(fmtDate(j.date)) + "</td><td>" + esc(j.description) + (showAccount ? '<span class="sub">' + esc(j.account) + "</span>" : '<span class="sub">#' + esc(j.invoice) + "</span>") + "</td>" +
+          "<td>" + esc([j.size, j.stock, j.colors].filter(Boolean).join(", ")) + (j.finishing && j.finishing !== "None" ? '<span class="sub">' + esc(j.finishing) + "</span>" : "") + "</td>" +
+          '<td class="num">' + (j.quantity ? j.quantity.toLocaleString("en-US") : "–") + '</td><td class="num">' + (j.total ? money(j.total) : "–") + '</td><td class="num">' + (j.quantity && j.total ? each(j.total / j.quantity) : "–") + "</td></tr>";
+      }).join("") + "</tbody></table></div>";
+  }
+
+  function copy(el, msg) {
+    var t = el.value;
+    var done = function () { $("toast").textContent = msg; };
+    var fallback = function () { el.focus(); el.select(); $("toast").textContent = "Text selected. Press Ctrl+C (or Cmd+C) to copy."; };
+    try { navigator.clipboard.writeText(t).then(done, fallback); } catch (e) { fallback(); }
+  }
+
+  /* ---------- Events ---------- */
+  $("req").addEventListener("submit", function (e) { e.preventDefault(); build(); });
+  $("copyPrompt").addEventListener("click", function () {
+    var t = "/allegra-quote-reply\n\nClient: " + $("company").value.trim() + "\nContact: " + $("contact").value.trim() + "\n\nEmail:\n" + $("email").value.trim();
+    var note = $("promptNote");
+    try {
+      navigator.clipboard.writeText(t).then(function () { note.textContent = "Prompt copied. Paste it into Claude Code in the allegra-prospecting repo, then load the brief it saves."; }, function () { note.textContent = "Couldn't copy here. Type /allegra-quote-reply in Claude Code and paste the email after it."; });
+    } catch (e) { note.textContent = "Couldn't copy here. Type /allegra-quote-reply in Claude Code and paste the email after it."; }
+  });
+  $("briefFile").addEventListener("change", function (e) {
+    var f = e.target.files[0]; if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      try {
+        var b = JSON.parse(rd.result);
+        if (!b.client || !b.email) throw new Error("bad");
+        applyBrief(b); build();
+      } catch (err) { $("briefStatus").textContent = "That file isn't a Claude brief. Load the .json file from the briefs folder."; }
+      e.target.value = "";
+    };
+    rd.readAsText(f);
+  });
+  $("csvFile").addEventListener("change", function (e) {
+    var f = e.target.files[0]; if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      try {
+        jobs = toJobs(rd.result); jobsSource = f.name;
+        store.set("allegra-qa-csv", rd.result); store.set("allegra-qa-csv-name", f.name);
+        build();
+      } catch (err) { $("jobsStatus").textContent = err.message; }
+      e.target.value = "";
+    };
+    rd.readAsText(f);
+  });
+  $("resetJobs").addEventListener("click", function () {
+    jobs = SAMPLE_JOBS; jobsSource = "sample";
+    store.set("allegra-qa-csv", null); store.set("allegra-qa-csv-name", null);
+    build();
+  });
+
+  applyBrief(SAMPLE_BRIEF);
+  build();
+})();
+</script>
